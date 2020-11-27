@@ -42,6 +42,9 @@ namespace {
 		auto name = strndup(segments[0].data(), segments[0].size());
 		__ensure(name);
 
+		auto passwd = strndup(segments[1].data(), segments[1].size());
+		__ensure(passwd);
+
 		auto uid = segments[2].to_number<int>();
 		if(!uid)
 			return false;
@@ -57,6 +60,7 @@ namespace {
 		__ensure(real_name);
 
 		entry->pw_name = name;
+		entry->pw_passwd = passwd;
 		entry->pw_uid = *uid;
 		entry->pw_gid = *gid;
 		entry->pw_dir = dir;
@@ -67,9 +71,11 @@ namespace {
 
 	void clear_entry(passwd *entry) {
 		free(entry->pw_name);
+		free(entry->pw_passwd);
 		free(entry->pw_dir);
 		free(entry->pw_shell);
 		entry->pw_name = nullptr;
+		entry->pw_passwd = nullptr;
 		entry->pw_dir = nullptr;
 		entry->pw_shell = nullptr;
 	}
