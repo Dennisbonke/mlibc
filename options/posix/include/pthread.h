@@ -50,7 +50,7 @@ extern "C" {
 #define PTHREAD_MUTEX_INITIALIZER {0, 0, 0}
 #define PTHREAD_RWLOCK_INITIALIZER {0, 0, 0}
 
-#define SIGALL_SET ((sigset_t *)(const unsigned long long [2]){ (const unsigned long long)-1, (const unsigned long long)-1 })
+#define SIGALL_SET ((sigset_t *)(const unsigned long long [2]){ (unsigned long)-1, (unsigned long)-1 })
 
 // TODO: move to own file and include in sys/types.h
 struct __mlibc_threadattr {
