@@ -11,8 +11,39 @@
 extern "C" {
 #endif
 
-typedef struct { } posix_spawnattr_t;
-typedef struct { } posix_spawn_file_actions_t;
+/*
+ * Musl places this in a seperate header called fdop.h
+ * This header isn't present in glibc, or on my host, so I
+ * include it's contents here
+ */
+
+#define FDOP_CLOSE 1
+#define FDOP_DUP2 2
+#define FDOP_OPEN 3
+#define FDOP_CHDIR 4
+#define FDOP_FCHDIR 5
+
+struct fdop {
+	struct fdop *next, *prev;
+	int cmd, fd, srcfd, oflag;
+	mode_t mode;
+	char path[];
+};
+
+typedef struct {
+	int __flags;
+	pid_t __pgrp;
+	sigset_t __def, __mask;
+	int __prio, __pol;
+	void *__fn;
+	char __pad[64 - sizeof(void *)];
+} posix_spawnattr_t;
+
+typedef struct {
+	int __pad0[2];
+	void *__actions;
+	int __pad[16];
+} posix_spawn_file_actions_t;
 
 // MISSIG: sigset_t
 
@@ -27,7 +58,7 @@ struct sched_param;
 #define POSIX_SPAWN_USEVFORK 64
 #define POSIX_SPAWN_SETSID 128
 
-int posix_spawn(pid_t *__restrict pid, const char *__restrict path,
+int posix_spawn(pid_t *__restrict res, const char *__restrict path,
 		const posix_spawn_file_actions_t *file_actions,
 		const posix_spawnattr_t *__restrict attrs,
 		char *const argv[], char *const envp[]);
