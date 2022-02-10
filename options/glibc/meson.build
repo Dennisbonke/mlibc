@@ -19,10 +19,12 @@ if not no_headers
 		'include/endian.h',
 		'include/ar.h',
 		'include/shadow.h',
-		'include/memory.h'
+		'include/memory.h',
+		'include/ucontext.h',
 	)
 	install_headers(
 		'include/sys/ioctl.h',
+		'include/sys/ucontext.h',
 		subdir: 'sys'
 	)
 	install_headers(
