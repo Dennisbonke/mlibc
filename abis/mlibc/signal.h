@@ -118,6 +118,22 @@ typedef struct __stack {
 #define CLD_STOPPED 5
 #define CLD_CONTINUED 6
 
+#define BUS_ADRALN 1
+#define BUS_ADRERR 2
+#define BUS_OBJERR 3
+
+#define ILL_ILLOPN 2
+#define ILL_ILLADR 3
+#define ILL_ILLTRP 4
+#define ILL_PRVOPC 5
+#define ILL_PRVREG 6
+#define ILL_COPROC 7
+#define ILL_BADSTK 8
+#define ILL_BADIADDR 9
+
+#define SEGV_MAPERR 1
+#define SEGV_ACCERR 2
+
 struct sigevent {
 	int sigev_notify;
 	int sigev_signo;
