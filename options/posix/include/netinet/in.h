@@ -77,6 +77,8 @@ uint16_t ntohs(uint16_t);
     ((((const uint8_t *)(a))[1] & 0xf) == 0xe)); \
 })
 
+#define IN_CLASSA(a) ((((in_addr_t)(a)) & 0x80000000) == 0)
+#define IN_CLASSB(a) ((((in_addr_t)(a)) & 0xc0000000) == 0x80000000)
 #define IN_CLASSD(a) ((((in_addr_t)(a)) & 0xf0000000) == 0xe0000000)
 #define IN_MULTICAST(a) IN_CLASSD(a)
 
