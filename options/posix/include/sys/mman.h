@@ -29,6 +29,7 @@
 // Linux extension:
 #define MREMAP_MAYMOVE 1
 #define MREMAP_FIXED 2
+#define MAP_NORESERVE 0x4000
 
 // Missing: posix_typed_mem_open(), POSIX_TYPED constants and related stuff.
 
