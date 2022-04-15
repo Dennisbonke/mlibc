@@ -9,16 +9,23 @@
 speed_t cfgetispeed(const struct termios *tios) {
 	return tios->ibaud;
 }
+
 speed_t cfgetospeed(const struct termios *tios) {
 	return tios->obaud;
 }
-int cfsetispeed(struct termios *, speed_t) {
-	__ensure(!"Not implemented");
-	__builtin_unreachable();
+
+int cfsetispeed(struct termios *tio, speed_t speed) {
+	return speed ? cfsetospeed(tio, speed) : 0;
 }
-int cfsetospeed(struct termios *, speed_t) {
-	__ensure(!"Not implemented");
-	__builtin_unreachable();
+
+int cfsetospeed(struct termios *tio, speed_t speed) {
+	if(speed & ~CBAUD) {
+		errno = EINVAL;
+		return -1;
+	}
+	tio->c_cflag &= ~CBAUD;
+	tio->c_cflag |= speed;
+	return 0;
 }
 
 void cfmakeraw(struct termios *t) {

@@ -91,6 +91,8 @@ extern "C" {
 #define PARODD  0x0020
 #define HUPCL   0x0040
 #define CLOCAL  0x0080
+// Non posix extension
+#define CBAUD   0010017
 
 // bitwise constants for c_lflag in struct termios
 #define ECHO    0x0001
