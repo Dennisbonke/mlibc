@@ -56,6 +56,7 @@ if not no_headers
 		'include/abi-bits/packet.h',
 		'include/abi-bits/inotify.h',
 		'include/abi-bits/clockid_t.h',
+		'include/abi-bits/mount.h',
 		host_machine.cpu_family() / 'abi-bits/arch-syscall.h',
 		subdir: 'abi-bits'
 	)

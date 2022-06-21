@@ -1,6 +1,8 @@
 #ifndef _SYS_MOUNT_H
 #define _SYS_MOUNT_H
 
+#include <abi-bits/mount.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
