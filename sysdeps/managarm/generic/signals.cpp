@@ -144,6 +144,24 @@ int sys_sigsuspend(const sigset_t *set) {
 	return EINTR;
 }
 
+int sys_pause() {
+	// SignalGuard sguard;
+	uint64_t former, seq;
+	sigset_t *set = 0;
+	sigemptyset(set);
+
+	HEL_CHECK(helSyscall2_2(
+	    kHelObserveSuperCall + posix::superSigMask,
+	    SIG_BLOCK,
+	    *reinterpret_cast<const HelWord *>(set),
+	    &former,
+	    &seq
+	));
+	HEL_CHECK(helSyscall1(kHelObserveSuperCall + posix::superSigSuspend, seq));
+
+	return EINTR;
+}
+
 int sys_sigpending(sigset_t *set) {
 	uint64_t pendingMask;
 
