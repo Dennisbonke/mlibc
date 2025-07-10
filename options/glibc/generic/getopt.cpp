@@ -85,6 +85,13 @@ int getopt_common_internal(int argc, char * const argv[], const char *optstring,
 				return -1;
 			}
 
+			if(!strcmp(arg, "--")) {
+				// If we encounter a "--", we stop processing options.
+				optind++;
+				optarg = nullptr;
+				return -1;
+			}
+
 			bool further_options = false;
 			int skip = optind;
 

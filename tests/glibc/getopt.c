@@ -340,6 +340,38 @@ void test10() {
 	assert(!strcmp(test_argv[6], "nonoption3"));
 }
 
+void test11() {
+	char *test_argv[] = {
+		"kmscon",
+		"--login",
+		"--",
+		"/sbin/agetty",
+		"-o",
+		"'-p -- \\u'",
+		"--noclear",
+		"--",
+		"-",
+		NULL,
+	};
+
+	int login = 0;
+
+	struct option opts[] = {
+		{ "login", no_argument, &login, 1 },
+		{ 0 },
+	};
+
+	optind = 0;;
+	int c = getopt_long(COUNT_OF(test_argv), test_argv, "l", opts, NULL);
+	assert(c == 0);
+	assert(optind == 2);
+	assert(login);
+
+	c = getopt_long(COUNT_OF(test_argv), test_argv, "l", opts, NULL);
+	assert(c == -1);
+	assert(optind == 3);
+}
+
 int main() {
 	test1();
 	test2();
@@ -351,6 +383,7 @@ int main() {
 	test8();
 	test9();
 	test10();
+	test11();
 
 	return 0;
 }
