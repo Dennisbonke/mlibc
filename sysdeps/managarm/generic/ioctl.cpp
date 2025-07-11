@@ -495,6 +495,9 @@ int sys_ioctl(int fd, unsigned long request, void *arg, int *result) {
 			*static_cast<int *>(arg) = resp.pid();
 			return 0;
 		}
+		case TIOCMGET: {
+			return EINVAL;
+		}
 		case CDROM_GET_CAPABILITY: {
 			managarm::fs::GenericIoctlRequest<MemoryAllocator> req(getSysdepsAllocator());
 			req.set_command(request);

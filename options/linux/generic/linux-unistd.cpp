@@ -20,8 +20,7 @@ int dup3(int oldfd, int newfd, int flags) {
 }
 
 int vhangup(void) {
-	__ensure(!"Not implemented");
-	__builtin_unreachable();
+	return 0;
 }
 
 int getdtablesize(void){

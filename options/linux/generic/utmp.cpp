@@ -6,6 +6,7 @@
 
 #include <bits/ensure.h>
 #include <mlibc/debug.hpp>
+#include <mlibc/posix-sysdeps.hpp>
 
 /*
  * The code in this file is largely based on glibc.
@@ -95,9 +96,29 @@ void endutent(void) {
 	}
 }
 
-struct utmp *pututline(const struct utmp *) {
-	mlibc::infoLogger() << "\e[31mmlibc: pututline() is a stub!\e[39m" << frg::endlog;
-	return NULL;
+struct utmp *pututline(const struct utmp *ut) {
+	if(fd < 0)
+		setutent();
+
+	size_t progress = 0;
+	uint8_t *ptr = (uint8_t *) ut;
+
+	off_t discard;
+	int err = mlibc::sys_seek(fd, 0, SEEK_END, &discard);
+	__ensure(!err);
+
+	while(progress < sizeof(*ut)) {
+		ssize_t written = 0;
+		if(mlibc::sys_write(fd, ptr + progress, sizeof(*ut) - progress, &written)) {
+			mlibc::sys_ftruncate(fd, discard);
+			return nullptr;
+		}
+		progress += written;
+	}
+
+	offset += progress;
+
+	return (struct utmp *) ut;
 }
 
 struct utmp *getutline(const struct utmp *) {

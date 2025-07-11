@@ -38,6 +38,7 @@ int utmpxname(const char *__file);
 struct utmpx *pututxline(const struct utmpx *__line);
 struct utmpx *getutxent(void);
 struct utmpx *getutxid(const struct utmpx *__id);
+struct utmpx *getutxline(const struct utmpx *__ut);
 void setutxent(void);
 void endutxent(void);
 
