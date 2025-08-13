@@ -504,13 +504,23 @@ int sys_setsockopt(int fd, int layer, int number, const void *buffer, socklen_t 
 		                       "unimplemented\e[39m"
 		                    << frg::endlog;
 		return 0;
+	} else if (layer == IPPROTO_TCP && number == TCP_QUICKACK) {
+		mlibc::infoLogger() << "\e[31mmlibc: setsockopt() call with IPPROTO_TCP and TCP_QUICKACK is "
+		                       "unimplemented\e[39m"
+		                    << frg::endlog;
+		return 0;
 	} else if (layer == IPPROTO_TCP && number == TCP_MAXSEG) {
-		mlibc::infoLogger() << "\e[31mmlibc: setsockopt() call with IPPROTO_TCP and TCP_NODELAY is "
+		mlibc::infoLogger() << "\e[31mmlibc: setsockopt() call with IPPROTO_TCP and TCP_MAXSEG is "
 		                       "unimplemented\e[39m"
 		                    << frg::endlog;
 		return 0;
 	} else if (layer == IPPROTO_TCP && number == TCP_KEEPIDLE) {
 		mlibc::infoLogger() << "\e[31mmlibc: setsockopt() call with IPPROTO_TCP and TCP_KEEPIDLE "
+		                       "is unimplemented\e[39m"
+		                    << frg::endlog;
+		return 0;
+	} else if (layer == IPPROTO_TCP && number == TCP_FASTOPEN) {
+		mlibc::infoLogger() << "\e[31mmlibc: setsockopt() call with IPPROTO_TCP and TCP_FASTOPEN "
 		                       "is unimplemented\e[39m"
 		                    << frg::endlog;
 		return 0;
