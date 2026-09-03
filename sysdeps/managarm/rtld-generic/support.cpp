@@ -276,9 +276,9 @@ private:
 
 frg::manual_box<Queue> globalQueue;
 
-extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork() {
-	globalQueue.destruct();
-	globalQueue.initialize();
+extern "C" void __mlibc_sysdep_rtld_postfork() {
+	if(globalQueue.valid())
+		globalQueue.destruct();
 	fileTable = nullptr;
 }
 

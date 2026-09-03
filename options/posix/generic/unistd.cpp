@@ -21,6 +21,7 @@
 #include <mlibc/allocator.hpp>
 #include <mlibc/arch-defs.hpp>
 #include <mlibc/debug.hpp>
+#include <mlibc/dlapi.hpp>
 #include <mlibc/getopt.hpp>
 #include <mlibc/thread.hpp>
 #include <mlibc/utmp.hpp>
@@ -1282,6 +1283,7 @@ int dup3(int oldfd, int newfd, int flags) {
 
 pid_t _Fork(void) {
 	auto self = mlibc::get_current_tcb();
+	auto parent_tid = self->tid;
 	pid_t child;
 	if (int e = mlibc::sysdep_or_enosys<Fork>(&child); e) {
 		errno = e;
@@ -1291,12 +1293,15 @@ pid_t _Fork(void) {
 	// update the cached TID in the TCB
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
+	if (!child)
+		__dlapi_postfork(parent_tid);
 
 	return child;
 }
 
 pid_t fork(void) {
 	auto self = mlibc::get_current_tcb();
+	auto parent_tid = self->tid;
 	pid_t child;
 
 	MLIBC_CHECK_OR_ENOSYS(mlibc::IsImplemented<Fork>, -1);
@@ -1308,8 +1313,10 @@ pid_t fork(void) {
 
 		hand = hand->prev;
 	}
+	__dlapi_prefork();
 
 	if(int e = mlibc::sysdep_or_panic<Fork>(&child); e) {
+		__dlapi_postfork_parent();
 		errno = e;
 		return -1;
 	}
@@ -1317,6 +1324,10 @@ pid_t fork(void) {
 	// update the cached TID in the TCB
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
+	if (!child)
+		__dlapi_postfork(parent_tid);
+	else
+		__dlapi_postfork_parent();
 
 	hand = self->atforkBegin;
 	while (hand) {
@@ -1335,6 +1346,7 @@ pid_t fork(void) {
 
 pid_t vfork(void) {
 	auto self = mlibc::get_current_tcb();
+	auto parent_tid = self->tid;
 	pid_t child;
 
 	/*
@@ -1360,6 +1372,8 @@ pid_t vfork(void) {
 	// update the cached TID in the TCB
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
+	if (!child)
+		__dlapi_postfork(parent_tid);
 
 	return child;
 }

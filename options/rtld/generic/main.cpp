@@ -72,6 +72,9 @@ extern HIDDEN char __ehdr_start[];
 // Global debug interface variable
 DebugInterface globalDebugInterface;
 
+extern "C" [[gnu::weak, gnu::visibility("hidden")]]
+void __mlibc_sysdep_rtld_postfork() { }
+
 #ifndef MLIBC_STATIC_BUILD
 
 // Use a PC-relative instruction sequence to find our runtime load address.
@@ -702,6 +705,21 @@ void setDlError(const char *error) {
 	} else {
 		dlErrors->insert(tcb, error);
 	}
+}
+
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_prefork() {
+	loaderLock.lock();
+}
+
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork_parent() {
+	loaderLock.unlock();
+}
+
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork(unsigned int parent_tid) {
+	loaderLock.rebind_after_fork(parent_tid);
+	if(runtimeTlsMapLock.valid())
+		runtimeTlsMapLock->reset_after_fork();
+	__mlibc_sysdep_rtld_postfork();
 }
 
 extern "C" [[ gnu::visibility("default") ]] uintptr_t *__dlapi_entrystack() {
