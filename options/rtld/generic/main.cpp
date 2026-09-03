@@ -57,7 +57,13 @@ frg::manual_box<FutexLock> runtimeTlsMapLock;
 // Serializes all access to the repository, scopes, and object lifecycle state.
 constinit RecursiveFutexLock loaderLock;
 
-using DlErrorMap = frg::hash_map<Tcb *, const char *, frg::hash<Tcb *>, LdsoAllocator>;
+struct DlError {
+	frg::string<LdsoAllocator> message;
+	frg::string<LdsoAllocator> pendingMessage;
+	bool pending;
+};
+
+using DlErrorMap = frg::hash_map<Tcb *, DlError, frg::hash<Tcb *>, LdsoAllocator>;
 frg::manual_box<DlErrorMap> dlErrors;
 
 // We use a small vector to avoid memory allocation for the default library paths
@@ -698,13 +704,22 @@ extern "C" void *interpreterMain(uintptr_t *entry_stack) {
 	return executableSO->entry;
 }
 
-void setDlError(const char *error) {
+void setDlError(frg::string<LdsoAllocator> error) {
 	auto tcb = mlibc::get_current_tcb();
 	if(auto entry = dlErrors->get(tcb)) {
-		*entry = error;
+		entry->pendingMessage = std::move(error);
+		entry->pending = true;
 	} else {
-		dlErrors->insert(tcb, error);
+		dlErrors->insert(tcb, DlError{
+			frg::string<LdsoAllocator>{getLdsoAllocator()}, std::move(error), true
+		});
 	}
+}
+
+void setDlError(const char *file, const char *error) {
+	auto message = frg::string<LdsoAllocator>{file, getLdsoAllocator()} + ": ";
+	message += error;
+	setDlError(std::move(message));
 }
 
 extern "C" [[ gnu::visibility("default") ]] void __dlapi_prefork() {
@@ -730,11 +745,11 @@ extern "C" [[ gnu::visibility("default") ]]
 const char *__dlapi_error() {
 	frg::unique_lock lock{loaderLock};
 	auto entry = dlErrors->get(mlibc::get_current_tcb());
-	if(!entry)
+	if(!entry || !entry->pending)
 		return nullptr;
-	auto error = *entry;
-	*entry = nullptr;
-	return error;
+	entry->message = std::move(entry->pendingMessage);
+	entry->pending = false;
+	return entry->message.data();
 }
 
 extern "C" [[ gnu::visibility("default") ]]
@@ -802,22 +817,22 @@ void *__dlapi_open(const char *file, int flags, void *returnAddress) {
 			case LinkerError::success:
 				__builtin_unreachable();
 			case LinkerError::notFound:
-				setDlError("Cannot locate requested DSO");
+				setDlError(file, "Cannot locate requested DSO");
 				break;
 			case LinkerError::fileTooShort:
-				setDlError("File too short");
+				setDlError(file, "File too short");
 				break;
 			case LinkerError::notElf:
-				setDlError("File is not an ELF file");
+				setDlError(file, "File is not an ELF file");
 				break;
 			case LinkerError::wrongElfType:
-				setDlError("File has wrong ELF type");
+				setDlError(file, "File has wrong ELF type");
 				break;
 			case LinkerError::outOfMemory:
-				setDlError("Out of memory");
+				setDlError(file, "Out of memory");
 				break;
 			case LinkerError::invalidProgramHeader:
-				setDlError("File has invalid program header");
+				setDlError(file, "File has invalid program header");
 				break;
 			}
 			return nullptr;
