@@ -434,6 +434,8 @@ typedef struct {
 	Elf64_Xword p_align; /* Alignment of segment */
 } Elf64_Phdr;
 
+#define PN_XNUM 0xffff
+
 enum {
 	DT_NULL = 0,
 	DT_NEEDED = 1,
