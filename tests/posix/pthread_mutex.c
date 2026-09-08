@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -100,6 +101,50 @@ static void testRecursive() {
 	pthread_mutex_destroy(&mutex);
 }
 
+static void *unlock_mutex_worker(void *arg) {
+	int *ret = arg;
+	*ret = pthread_mutex_unlock(&mutex);
+	return NULL;
+}
+
+static void testNonOwnerUnlock(int type) {
+	pthread_mutexattr_t attr;
+	pthread_mutexattr_init(&attr);
+	assert(!pthread_mutexattr_settype(&attr, type));
+	assert(!pthread_mutex_init(&mutex, &attr));
+	pthread_mutexattr_destroy(&attr);
+
+	assert(!pthread_mutex_lock(&mutex));
+
+	int ret = 0;
+	pthread_t thread;
+	assert(!pthread_create(&thread, NULL, unlock_mutex_worker, &ret));
+	assert(!pthread_join(thread, NULL));
+	assert(ret == EPERM);
+
+	assert(!pthread_mutex_unlock(&mutex));
+	assert(!pthread_mutex_destroy(&mutex));
+}
+
+static void testNormalUnlockAfterFork() {
+	pthread_mutex_t forkMutex = PTHREAD_MUTEX_INITIALIZER;
+	assert(!pthread_mutex_lock(&forkMutex));
+
+	pid_t pid = fork();
+	assert(pid >= 0);
+	if (!pid) {
+		_exit(pthread_mutex_unlock(&forkMutex) != 0);
+	}
+
+	int status;
+	assert(waitpid(pid, &status, 0) == pid);
+	assert(WIFEXITED(status));
+	assert(WEXITSTATUS(status) == 0);
+
+	assert(!pthread_mutex_unlock(&forkMutex));
+	assert(!pthread_mutex_destroy(&forkMutex));
+}
+
 static void testDestroyBusy() {
 	pthread_mutex_t busyMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -180,6 +225,9 @@ int main() {
 	testAttr();
 	testNormal();
 	testRecursive();
+	testNonOwnerUnlock(PTHREAD_MUTEX_ERRORCHECK);
+	testNonOwnerUnlock(PTHREAD_MUTEX_RECURSIVE);
+	testNormalUnlockAfterFork();
 	testDestroyBusy();
 	testTimedLock();
 
