@@ -16,7 +16,8 @@ libc_sources += files(
 	'generic/mount.cpp',
 	'generic/ptrace.cpp',
 	'generic/sysinfo.cpp',
-	'x86_64/thread.S'
+	'x86_64/thread.S',
+	'x86_64/signal.S'
 )
 
 if not no_headers

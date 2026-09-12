@@ -17,7 +17,7 @@
 #define SYS_PSELECT         13
 #define SYS_READLINK        14
 #define SYS_ACCESS          15
-#define SYS_CHMOD           16
+/* SYS_CHMOD removed */
 #define SYS_FCNTL           17
 #define SYS_UNLINKAT        18
 #define SYS_FTRUNCATE       19
@@ -40,7 +40,7 @@
 #define SYS_MUNMAP          36
 #define SYS_MSYNC           37
 #define SYS_DUP2            38
-#define SYS_SIGNAL          39
+/* SYS_SIGNAL removed */
 #define SYS_SIGACTION       40
 #define SYS_SIGPENDING      41
 #define SYS_SIGPROCMASK     42
@@ -70,8 +70,8 @@
 #define SYS_GETTID          66  // Ethereal API (pthread)
 #define SYS_SETTLS          67  // Ethereal API (pthread)
 #define SYS_EXIT_THREAD     68  // Ethereal API (pthread)
-#define SYS_JOIN_THREAD     69  // Ethereal API (pthread)
-#define SYS_KILL_THREAD     70  // Ethereal API (pthread)
+/* SYS_JOIN_THREAD removed */
+/* SYS_KILL_THREAD removed */
 #define SYS_EPOLL_CREATE    71
 #define SYS_EPOLL_CTL       72
 #define SYS_EPOLL_PWAIT     73
@@ -121,5 +121,8 @@
 #define SYS_FACCESSAT       117
 #define SYS_SYNC            118
 #define SYS_FSTATAT         119
+#define SYS_SETGSBASE       120 // Ethereal API
+#define SYS_SIGRETURN       121 // Return from a signal handler (called by the trampoline)
+#define SYS_SIGALTSTACK     122 // Alternate signal stack
 
 #endif
