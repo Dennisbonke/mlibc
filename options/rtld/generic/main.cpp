@@ -117,7 +117,7 @@ extern "C" void relocateSelf() {
 		if(ELF_R_SYM(reloc->r_info))
 			__builtin_trap();
 
-		auto p = reinterpret_cast<uint64_t *>(ldso_base + reloc->r_offset);
+		auto p = reinterpret_cast<uintptr_t *>(ldso_base + reloc->r_offset);
 		switch(type) {
 		case R_RELATIVE:
 			*p = ldso_base + reloc->r_addend;
@@ -134,7 +134,7 @@ extern "C" void relocateSelf() {
 		if(ELF_R_SYM(reloc->r_info))
 			__builtin_trap();
 
-		auto p = reinterpret_cast<uint64_t *>(ldso_base + reloc->r_offset);
+		auto p = reinterpret_cast<uintptr_t *>(ldso_base + reloc->r_offset);
 		switch(type) {
 		case R_RELATIVE:
 			*p += ldso_base;
@@ -224,7 +224,7 @@ extern "C" void *lazyRelocate(SharedObject *object, unsigned int rel_index) {
 	//mlibc::infoLogger() << "Lazy relocation to " << symbol_str
 	//		<< " resolved to " << pointer << frg::endlog;
 
-	*(uint64_t *)(object->baseAddress + reloc->r_offset) = p->virtualAddress();
+	*(uintptr_t *)(object->baseAddress + reloc->r_offset) = p->virtualAddress();
 	return (void *)p->virtualAddress();
 }
 
