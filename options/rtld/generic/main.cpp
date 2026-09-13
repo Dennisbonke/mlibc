@@ -577,13 +577,6 @@ extern "C" void *interpreterMain(uintptr_t *entry_stack) {
 		libraryPaths->push_back(path);
 	}
 
-// This is here because libgcc will add a global constructor on glibc Linux
-// (which is what it believes we are due to the aarch64-linux-gnu toolchain)
-// in order to check if LSE atomics are supported.
-//
-// This is not necessary on a custom Linux toolchain and is purely an artifact of
-// using the host toolchain.
-#if defined(__aarch64__) && defined(__gnu_linux__)
 	for (size_t i = 0; i < num_ldso_ctors; i++) {
 		if(rtldConfig.debug)
 			mlibc::infoLogger() << "ldso: Running own constructor at "
@@ -591,13 +584,6 @@ extern "C" void *interpreterMain(uintptr_t *entry_stack) {
 					<< frg::endlog;
 		ldso_ctors[i]();
 	}
-#else
-	if (num_ldso_ctors > 0) {
-		mlibc::panicLogger() << "ldso: Found unexpected own global constructor(s), init_array starts at: "
-				<< ldso_ctors
-				<< frg::endlog;
-	}
-#endif
 
 #else
 	(void)env_ld_library_path;
