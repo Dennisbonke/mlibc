@@ -549,10 +549,29 @@ int Sysdeps<Sigprocmask>::operator()(
 	return -err;
 }
 
+#ifndef MLIBC_BUILDING_RTLD
+extern "C" void __mlibc_restorer();
+
 int Sysdeps<Sigaction>::operator()(
     int signum, const struct sigaction *__restrict act, struct sigaction *__restrict oact
 ) {
-	long err = SYSCALL3(SYS_SIGACTION, signum, act, oact);
+	struct sigaction new_action;
+	if (act) {
+		memcpy(&new_action, act, sizeof(struct sigaction));
+	}
+
+	if (act && (new_action.sa_flags & SA_RESTORER) == 0) {
+		new_action.sa_restorer = __mlibc_restorer;
+		new_action.sa_flags |= SA_RESTORER;
+	}
+
+	long err = SYSCALL3(SYS_SIGACTION, signum, act ? &new_action : nullptr, oact);
+	return -err;
+}
+#endif
+
+int Sysdeps<Sigaltstack>::operator()(const stack_t *ss, stack_t *oss) {
+	long err = SYSCALL2(SYS_SIGALTSTACK, ss, oss);
 	return -err;
 }
 
@@ -602,6 +621,10 @@ int Sysdeps<Fcntl>::operator()(int fd, int request, va_list args, int *result) {
 	return 0;
 }
 
+int Sysdeps<Flock>::operator()(int fd, int options) {
+	return -(SYSCALL2(SYS_FLOCK, fd, options));	
+}
+
 int Sysdeps<Uname>::operator()(struct utsname *buf) { return -(SYSCALL1(SYS_UNAME, buf)); }
 
 int Sysdeps<Umask>::operator()(mode_t mode, mode_t *old) {
@@ -615,6 +638,7 @@ int Sysdeps<Umask>::operator()(mode_t mode, mode_t *old) {
 }
 
 int Sysdeps<Fsync>::operator()(int fd) { return -(SYSCALL1(SYS_FSYNC, fd)); }
+int Sysdeps<Fdatasync>::operator()(int fd) { return -(SYSCALL1(SYS_FSYNC, fd)); }
 
 void Sysdeps<Sync>::operator()() { SYSCALL0(SYS_SYNC); }
 
@@ -716,6 +740,11 @@ int Sysdeps<Openpty>::operator()(
 
 int Sysdeps<Chroot>::operator()(const char *path) {
 	mlibc::infoLogger() << "warning: sysdeps<Chroot> not implemented." << frg::endlog;
+	return 0;
+}
+
+int Sysdeps<Utimensat>::operator()(int dirfd, const char *pathname, const struct timespec times[2], int flags) {
+	mlibc::infoLogger() << "warning: sysdeps<Utimensat> not implemented." << frg::endlog;
 	return 0;
 }
 
