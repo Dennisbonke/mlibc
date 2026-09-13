@@ -246,6 +246,8 @@ struct SharedObject {
 
 	uint64_t globalRts;
 	bool wasLinked;
+	bool skipRelocation = false;
+	bool skipInit = false;
 
 	bool scheduledForInit;
 	bool onInitStack;

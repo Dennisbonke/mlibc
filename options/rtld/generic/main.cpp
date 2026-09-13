@@ -648,6 +648,8 @@ extern "C" void *interpreterMain(uintptr_t *entry_stack) {
 	ldso->phdrPointer = ldso_phdr;
 	ldso->phdrCount = ldso_ehdr->e_phnum;
 	ldso->phdrEntrySize = ldso_ehdr->e_phentsize;
+	ldso->skipRelocation = true;
+	ldso->skipInit = true;
 
 	// We can't initialise the ldso object after the executable SO,
 	// so we have to set the ldso path after loading both.
