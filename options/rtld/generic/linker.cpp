@@ -98,6 +98,7 @@ unsigned long getauxval(unsigned long type) {
 	}
 }
 
+
 #if defined(__riscv)
 
 #include <sys/hwprobe.h>
@@ -522,8 +523,8 @@ void doDestruct(SharedObject *object);
 void ObjectRepository::destructObjects() {
 	while (_destructQueue.size() > 0) {
 		auto top = _destructQueue.top();
-		doDestruct(top);
 		_destructQueue.pop();
+		doDestruct(top);
 	}
 }
 
@@ -1368,6 +1369,8 @@ void doInitialize(SharedObject *object) {
 void doDestruct(SharedObject *object) {
 	if(!object->wasInitialized || object->wasDestroyed)
 		return;
+	// Mark the object before running user code so recursive exit cannot run it twice.
+	object->wasDestroyed = true;
 
 	if(rtldConfig.debugVerbose)
 		mlibc::infoLogger() << "rtld: Destruct " << object->name << frg::endlog;
@@ -1385,7 +1388,6 @@ void doDestruct(SharedObject *object) {
 
 	if(rtldConfig.debugVerbose)
 		mlibc::infoLogger() << "rtld: Object destruction complete" << frg::endlog;
-	object->wasDestroyed = true;
 }
 
 // --------------------------------------------------------
@@ -2492,4 +2494,3 @@ void Loader::_processLazyRelocations(SharedObject *object) {
 		}
 	}
 }
-

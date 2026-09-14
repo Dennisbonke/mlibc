@@ -11,6 +11,7 @@
 
 #include <mlibc/all-sysdeps.hpp>
 #include <mlibc/debug.hpp>
+#include <mlibc/dlapi.hpp>
 #include <mlibc/thread.hpp>
 #include <mlibc/tid.hpp>
 
@@ -90,20 +91,25 @@ int forkpty(int *mfd, char *name, const struct termios *ios, const struct winsiz
 	if(openpty(mfd, &sfd, name, ios, win))
 		return -1;
 
+	auto self = mlibc::get_current_tcb();
+	auto parent_tid = self->tid;
 	pid_t child;
+	__dlapi_prefork();
 	if(int e = mlibc::sysdep_or_enosys<Fork>(&child); e) {
+		__dlapi_postfork_parent();
 		errno = e;
 		return -1;
 	}
 
 	if(!child) {
 		// update the cached TID in the TCB
-		auto self = mlibc::get_current_tcb();
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
+		__dlapi_postfork(parent_tid);
 
 		if(login_tty(sfd))
 			mlibc::panicLogger() << "mlibc: TTY login fail in forkpty() child" << frg::endlog;
 	}else{
+		__dlapi_postfork_parent();
 		if(int e = mlibc::sysdep<Close>(sfd); e) {
 			errno = e;
 			return -1;
@@ -112,4 +118,3 @@ int forkpty(int *mfd, char *name, const struct termios *ios, const struct winsiz
 
 	return child;
 }
-
