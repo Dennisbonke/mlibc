@@ -32,6 +32,35 @@ HelHandle __mlibc_getPassthrough(int fd) {
 
 namespace mlibc {
 
+namespace {
+
+inline int doSynchronize(int fd, managarm::posix::SynchronizeScope scope,
+		uint32_t flags) {
+	SignalGuard sguard;
+
+	managarm::posix::SynchronizeRequest<SysdepsAllocator> req(getSysdepsAllocator());
+	req.set_fd(fd);
+	req.set_scope(scope);
+	req.set_flags(flags);
+
+	auto [offer, sendReq, recvResp] = exchangeMsgsSync(
+		getPosixLane(),
+		helix_ng::offer(
+			helix_ng::sendBragiHeadOnly(req, getSysdepsAllocator()),
+			helix_ng::recvInline()
+		)
+	);
+	HEL_CHECK(offer.error());
+	HEL_CHECK(sendReq.error());
+	HEL_CHECK(recvResp.error());
+
+	managarm::posix::SynchronizeResponse<SysdepsAllocator> resp(getSysdepsAllocator());
+	resp.ParseFromArray(recvResp.data(), recvResp.length());
+	return resp.error() | toErrno;
+}
+
+} // namespace
+
 int Sysdeps<Chdir>::operator()(const char *path) {
 	SignalGuard sguard;
 
@@ -651,9 +680,9 @@ int Sysdeps<Ttyname>::operator()(int fd, char *buf, size_t size) {
 	return 0;
 }
 
-int Sysdeps<Fdatasync>::operator()(int) {
-	mlibc::infoLogger() << "\e[35mmlibc: fdatasync() is a no-op\e[39m" << frg::endlog;
-	return 0;
+int Sysdeps<Fdatasync>::operator()(int fd) {
+	return doSynchronize(fd, managarm::posix::SynchronizeScope::FILE,
+		managarm::posix::SynchronizeFlags::DATA_ONLY);
 }
 
 int Sysdeps<GetCwd>::operator()(char *buffer, size_t size) {
@@ -2813,11 +2842,18 @@ int Sysdeps<GetHostname>::operator()(char *buffer, size_t bufsize) {
 }
 
 int Sysdeps<Fsync>::operator()(int fd) {
-	auto handle = getHandleForFd(fd);
-	if (!handle)
-		return EBADF;
-	mlibc::infoLogger() << "mlibc: fsync is a stub" << frg::endlog;
-	return 0;
+	return doSynchronize(fd, managarm::posix::SynchronizeScope::FILE,
+		0);
+}
+
+void Sysdeps<Sync>::operator()() {
+	(void)doSynchronize(-1, managarm::posix::SynchronizeScope::ALL,
+		0);
+}
+
+int Sysdeps<Syncfs>::operator()(int fd) {
+	return doSynchronize(fd, managarm::posix::SynchronizeScope::FILESYSTEM,
+		0);
 }
 
 int Sysdeps<MemfdCreate>::operator()(const char *name, int flags, int *fd) {
