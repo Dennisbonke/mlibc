@@ -1834,6 +1834,9 @@ void Loader::linkObjects(SharedObject *root) {
 		if(object->dynamic == nullptr)
 			continue;
 
+		if (object->skipRelocation)
+			continue;
+
 		if(rtldConfig.debugVerbose)
 			mlibc::infoLogger() << "rtld: Linking " << object->name << frg::endlog;
 
@@ -2082,7 +2085,9 @@ void Loader::initObjects(ObjectRepository *repository) {
 
 	for(auto object : _initQueue) {
 		if(!object->wasInitialized) {
-			doInitialize(object);
+			if (!object->skipInit)
+				doInitialize(object);
+			
 			repository->addObjectToDestructQueue(object);
 		}
 	}
