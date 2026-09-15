@@ -96,7 +96,7 @@ int forkpty(int *mfd, char *name, const struct termios *ios, const struct winsiz
 	pid_t child;
 	__dlapi_prefork();
 	if(int e = mlibc::sysdep_or_enosys<Fork>(&child); e) {
-		__dlapi_postfork_parent();
+		__dlapi_postfork_finish();
 		errno = e;
 		return -1;
 	}
@@ -104,12 +104,13 @@ int forkpty(int *mfd, char *name, const struct termios *ios, const struct winsiz
 	if(!child) {
 		// update the cached TID in the TCB
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
-		__dlapi_postfork(parent_tid);
+		__dlapi_postfork_rebind(parent_tid);
+		__dlapi_postfork_finish();
 
 		if(login_tty(sfd))
 			mlibc::panicLogger() << "mlibc: TTY login fail in forkpty() child" << frg::endlog;
 	}else{
-		__dlapi_postfork_parent();
+		__dlapi_postfork_finish();
 		if(int e = mlibc::sysdep<Close>(sfd); e) {
 			errno = e;
 			return -1;

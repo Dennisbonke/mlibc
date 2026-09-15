@@ -21,9 +21,23 @@ void *__dlapi_vdsosym(const char *, const char *);
 int __dlapi_reverse(const void *, __dlapi_symbol *);
 int __dlapi_close(void *);
 
+// fork() support for ld.so. fork(), forkpty() and pdfork() bracket the fork as:
+//
+//     __dlapi_prefork();
+//     <fork>
+//     if(!child_pid)
+//         __dlapi_postfork_rebind(parent_tid);
+//     __dlapi_postfork_finish();
+//
+// _Fork() and vfork() do not synchronize with ld.so; they only call
+// __dlapi_postfork_rebind() in the child.
+
+// Lock the ld.so mutex so that the child inherits consistent loader state.
 void __dlapi_prefork();
-void __dlapi_postfork_parent();
-void __dlapi_postfork(unsigned int parent_tid);
+// Unlock the ld.so mutex again.
+void __dlapi_postfork_finish();
+// Rebind the ld.so lock from parent to child.
+void __dlapi_postfork_rebind(unsigned int parent_tid);
 
 #if __MLIBC_GLIBC_OPTION
 #include <dlfcn.h>

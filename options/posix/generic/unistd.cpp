@@ -1294,7 +1294,7 @@ pid_t _Fork(void) {
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
 	if (!child)
-		__dlapi_postfork(parent_tid);
+		__dlapi_postfork_rebind(parent_tid);
 
 	return child;
 }
@@ -1316,7 +1316,7 @@ pid_t fork(void) {
 	__dlapi_prefork();
 
 	if(int e = mlibc::sysdep_or_panic<Fork>(&child); e) {
-		__dlapi_postfork_parent();
+		__dlapi_postfork_finish();
 		errno = e;
 		return -1;
 	}
@@ -1325,9 +1325,8 @@ pid_t fork(void) {
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
 	if (!child)
-		__dlapi_postfork(parent_tid);
-	else
-		__dlapi_postfork_parent();
+		__dlapi_postfork_rebind(parent_tid);
+	__dlapi_postfork_finish();
 
 	hand = self->atforkBegin;
 	while (hand) {
@@ -1373,7 +1372,7 @@ pid_t vfork(void) {
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
 	if (!child)
-		__dlapi_postfork(parent_tid);
+		__dlapi_postfork_rebind(parent_tid);
 
 	return child;
 }

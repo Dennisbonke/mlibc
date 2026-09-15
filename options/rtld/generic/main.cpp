@@ -714,11 +714,11 @@ extern "C" [[ gnu::visibility("default") ]] void __dlapi_prefork() {
 	loaderLock.lock();
 }
 
-extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork_parent() {
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork_finish() {
 	loaderLock.unlock();
 }
 
-extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork(unsigned int parent_tid) {
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork_rebind(unsigned int parent_tid) {
 	loaderLock.rebind_after_fork(parent_tid);
 	if(runtimeTlsMapLock.valid())
 		runtimeTlsMapLock->reset_after_fork();
