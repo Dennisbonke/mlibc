@@ -126,16 +126,24 @@ struct alignas(4) FutexLockImpl {
 	}
 
 	// Only valid in the single-threaded child immediately after fork().
-	// Preserve ownership if the surviving thread held this lock before fork().
-	void rebind_after_fork(unsigned int parent_tid) {
+	// Drop the acquisition made by the prefork handler while preserving any
+	// ownership that predates fork().
+	void rebind_after_fork(unsigned int parent_tid, bool drop_prefork_lock) {
 		auto state = __atomic_load_n(&_state, __ATOMIC_RELAXED);
 		if((state & ownerMask) != parent_tid) {
 			reset_after_fork();
 			return;
 		}
 
-		if constexpr (Recursive)
-			__ensure(_recursion);
+		if constexpr (Recursive) {
+			if(drop_prefork_lock) {
+				__ensure(_recursion);
+				if(!--_recursion) {
+					reset_after_fork();
+					return;
+				}
+			}
+		}
 		__atomic_store_n(&_state, mlibc::this_tid(), __ATOMIC_RELAXED);
 	}
 private:

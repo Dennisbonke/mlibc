@@ -104,7 +104,7 @@ int forkpty(int *mfd, char *name, const struct termios *ios, const struct winsiz
 	if(!child) {
 		// update the cached TID in the TCB
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
-		__dlapi_postfork(parent_tid);
+		__dlapi_postfork(parent_tid, true);
 
 		if(login_tty(sfd))
 			mlibc::panicLogger() << "mlibc: TTY login fail in forkpty() child" << frg::endlog;

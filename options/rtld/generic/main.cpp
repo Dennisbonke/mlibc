@@ -718,8 +718,8 @@ extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork_parent() {
 	loaderLock.unlock();
 }
 
-extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork(unsigned int parent_tid) {
-	loaderLock.rebind_after_fork(parent_tid);
+extern "C" [[ gnu::visibility("default") ]] void __dlapi_postfork(unsigned int parent_tid, bool preforked) {
+	loaderLock.rebind_after_fork(parent_tid, preforked);
 	if(runtimeTlsMapLock.valid())
 		runtimeTlsMapLock->reset_after_fork();
 	__mlibc_sysdep_rtld_postfork();

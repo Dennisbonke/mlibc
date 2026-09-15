@@ -23,7 +23,7 @@ int __dlapi_close(void *);
 
 void __dlapi_prefork();
 void __dlapi_postfork_parent();
-void __dlapi_postfork(unsigned int parent_tid);
+void __dlapi_postfork(unsigned int parent_tid, bool preforked);
 
 #if __MLIBC_GLIBC_OPTION
 #include <dlfcn.h>

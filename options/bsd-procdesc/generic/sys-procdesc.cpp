@@ -35,7 +35,7 @@ pid_t pdfork(int *fdp, int flags) {
 	if (!child)
 		__atomic_store_n(&self->tid, mlibc::refetch_tid(), __ATOMIC_RELAXED);
 	if (!child)
-		__dlapi_postfork(parent_tid);
+		__dlapi_postfork(parent_tid, true);
 	else
 		__dlapi_postfork_parent();
 
