@@ -15,8 +15,10 @@ static void *worker(void *arg) {
 int main() {
 	// Check that recursive locking works.
 	assert(!ftrylockfile(stdout));
+	assert(!ftrylockfile(stdout));
 	flockfile(stdout);
 	flockfile(stdout);
+	funlockfile(stdout);
 	funlockfile(stdout);
 	funlockfile(stdout);
 	funlockfile(stdout);

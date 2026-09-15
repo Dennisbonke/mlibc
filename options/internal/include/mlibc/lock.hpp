@@ -87,7 +87,7 @@ struct alignas(4) FutexLockImpl {
 			// If this (recursive) mutex is already owned by us, increment the recursion level.
 			if((expected & ownerMask) == this_tid) {
 				if constexpr (Recursive) {
-					__ensure(!_recursion);
+					__ensure(_recursion);
 					++_recursion;
 					return true;
 				} else {
